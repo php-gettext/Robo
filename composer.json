@@ -19,6 +19,7 @@
     },
     "require": {
         "php": ">=5.3.0",
+        "codegyre/robo": "^0.7.*",
         "gettext/gettext": "3.*"
     },
     "autoload": {
