@@ -139,6 +139,7 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
                 return "{$prefix}JsCode{$suffix}";
 
             case 'po':
+            case 'pot':
                 return "{$prefix}Po{$suffix}";
 
             case 'mo':
