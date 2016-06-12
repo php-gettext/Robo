@@ -49,7 +49,7 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
         $iterator = new RecursiveIteratorIterator($directory);
 
         if ($regex) {
-            $iterator = new RegexIterator($iterator, $regex, RecursiveRegexIterator::GET_MATCH);
+            $iterator = new RegexIterator($iterator, $regex);
         }
 
         $this->iterator->attachIterator($iterator);
@@ -66,7 +66,7 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
      */
     public function generate($path)
     {
-        $this->targets[] = $path;
+        $this->targets[] = func_get_args();
 
         return $this;
     }
@@ -76,7 +76,8 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
      */
     public function run()
     {
-        foreach ($this->targets as $target) {
+        foreach ($this->targets as $targets) {
+            $target = $targets[0];
             $translations = new Translations();
 
             $this->scan($translations);
@@ -87,16 +88,18 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
                 $translations->mergeWith(Translations::$fn($target), Translations::MERGE_HEADERS | Translations::MERGE_LANGUAGE | Translations::MERGE_PLURAL | Translations::MERGE_COMMENTS);
             }
 
-            $fn = $this->getFunctionName('to', $target, 'File');
-            $dir = dirname($target);
+            foreach ($targets as $target) {
+                $fn = $this->getFunctionName('to', $target, 'File');
+                $dir = dirname($target);
 
-            if (!is_dir($dir)) {
-                mkdir($dir, 0777, true);
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
+                }
+
+                $translations->$fn($target);
+
+                $this->printTaskInfo("Gettext exported to {$target}");
             }
-
-            $translations->$fn($target);
-
-            $this->printTaskInfo("Gettext exported to {$target}");
         }
     }
 
@@ -144,6 +147,9 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
 
             case 'mo':
                 return "{$prefix}Mo{$suffix}";
+
+            case 'json':
+                return "{$prefix}Json{$suffix}";
         }
     }
 }
