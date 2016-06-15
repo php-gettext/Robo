@@ -85,7 +85,7 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
             if (is_file($target)) {
                 $fn = $this->getFunctionName('from', $target, 'File');
 
-                $translations->mergeWith(Translations::$fn($target), Translations::MERGE_HEADERS | Translations::MERGE_LANGUAGE | Translations::MERGE_PLURAL | Translations::MERGE_COMMENTS);
+                $translations->mergeWith(Translations::$fn($target));
             }
 
             foreach ($targets as $target) {
