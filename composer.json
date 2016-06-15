@@ -19,7 +19,13 @@
     },
     "require": {
         "php": ">=5.4",
-        "gettext/gettext": "dev-master"
+        "gettext/gettext": "4.*"
+    },
+    "require-dev": {
+        "illuminate/view": "*",
+        "twig/twig": "*",
+        "twig/extensions": "*",
+        "symfony/yaml": "~2"
     },
     "autoload": {
         "psr-4": {
