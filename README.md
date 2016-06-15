@@ -21,20 +21,20 @@ require 'vendor/autoload.php';
 
 class RoboFile extends \Robo\Tasks
 {
-	use Gettext\Robo\GettextScanner;
+    use Gettext\Robo\GettextScanner;
 
     /**
      * Scan files to find new gettext values
      */
     public function gettext()
     {
-    	$this->taskGettextScanner()
-    		->extract(__DIR__.'/templates/')
-    		->extract(__DIR__.'/js/', '/.*\.js/') //directory + regex
-    		->generate(__DIR__.'/Locale/gl/LC_MESSAGES/messages.mo')
-    		->generate(__DIR__.'/Locale/es/LC_MESSAGES/messages.mo')
-    		->generate(__DIR__.'/Locale/en/LC_MESSAGES/messages.mo')
-    		->run();
+        $this->taskGettextScanner()
+            ->extract('templates/')
+            ->extract('js/', '/.*\.js/') //directory + regex
+            ->generate('Locale/gl/LC_MESSAGES/messages.mo')
+            ->generate('Locale/es/LC_MESSAGES/messages.mo')
+            ->generate('Locale/en/LC_MESSAGES/messages.mo')
+            ->run();
     }
 }
 ```
