@@ -10,6 +10,7 @@ use RecursiveIteratorIterator;
 use RegexIterator;
 use Robo\Task\BaseTask;
 use Robo\Contract\TaskInterface;
+use Robo\Result;
 
 /**
  * Trait to scan files to get gettext entries.
@@ -21,7 +22,7 @@ trait GettextScanner
      */
     protected function taskGettextScanner()
     {
-        return new TaskGettextScanner();
+        return $this->task(TaskGettextScanner::class);
     }
 }
 
@@ -116,6 +117,8 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
                 $this->printTaskInfo("Gettext exported to {$target}");
             }
         }
+
+        return Result::success($this, 'All gettext generated successfuly!');
     }
 
     /**
