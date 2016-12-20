@@ -19,7 +19,8 @@
     },
     "require": {
         "php": ">=5.4",
-        "gettext/gettext": "4.*"
+        "gettext/gettext": "^4.0",
+        "consolidation/robo": "^1.0"
     },
     "require-dev": {
         "illuminate/view": "*",
