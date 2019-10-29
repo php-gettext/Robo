@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Robo tasks to manage gettext",
     "keywords": ["robo", "tasks", "js", "gettext", "i18n", "translation", "po", "mo"],
-    "homepage": "https://github.com/oscarotero/GettextRobo",
+    "homepage": "https://github.com/php-gettext/Robo",
     "license": "MIT",
     "authors": [
         {
@@ -15,18 +15,12 @@
     ],
     "support": {
         "email": "oom@oscarotero.com",
-        "issues": "https://github.com/oscarotero/GettextRobo/issues"
+        "issues": "https://github.com/php-gettext/Robo/issues"
     },
     "require": {
-        "php": ">=5.4",
-        "gettext/gettext": "^4.0",
-        "consolidation/robo": "^1.0"
-    },
-    "require-dev": {
-        "illuminate/view": "*",
-        "twig/twig": "*",
-        "twig/extensions": "*",
-        "symfony/yaml": "~2"
+        "php": "^7.2",
+        "gettext/gettext": "dev-v5-dev",
+        "consolidation/robo": "^2.0"
     },
     "autoload": {
         "psr-4": {

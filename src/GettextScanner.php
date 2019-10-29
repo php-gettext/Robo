@@ -3,6 +3,11 @@
 namespace Gettext\Robo;
 
 use Gettext\Translations;
+use Gettext\Scanner\ScannerInterface;
+use Gettext\Scanner\PhpScanner;
+use Gettext\Loader\PoLoader;
+use Gettext\Generator\PoGenerator;
+use Gettext\Merge;
 use FilesystemIterator;
 use MultipleIterator;
 use RecursiveDirectoryIterator;
@@ -15,52 +20,37 @@ use Robo\Result;
 /**
  * Trait to scan files to get gettext entries.
  */
-trait GettextScanner
+trait Gettext
 {
     /**
      * Init a gettext task.
      */
-    protected function taskGettextScanner()
+    protected function Gettext(string ...$domains)
     {
-        return $this->task(TaskGettextScanner::class);
+        return $this->task(Scanner::class, $domains);
     }
 }
 
-class TaskGettextScanner extends BaseTask implements TaskInterface
+class Scanner extends BaseTask implements TaskInterface
 {
     private $iterator;
-    private $targets = [];
+    private $domains = [];
+    private $defaultDomain;
 
-    private static $regex;
-    private static $suffixes = [
-        '.blade.php' => 'Blade',
-        '.csv' => 'Csv',
-        '.jed.json' => 'Jed',
-        '.js' => 'JsCode',
-        '.json' => 'Json',
-        '.mo' => 'Mo',
-        '.php' => ['PhpCode', 'PhpArray'],
-        '.po' => 'Po',
-        '.pot' => 'Po',
-        '.twig' => 'Twig',
-        '.xliff' => 'Xliff',
-        '.yaml' => 'Yaml',
-    ];
-
-    public function __construct()
+    public function __construct(array $domains)
     {
         $this->iterator = new MultipleIterator(MultipleIterator::MIT_NEED_ANY);
     }
 
+    public function defaultDomain(string $domain): self
+    {
+        $this->defaultDomain = $domain;
+    }
+
     /**
-     * Add a new source folder.
-     *
-     * @param string      $path
-     * @param null|string $regex
-     *
-     * @return $this
+     * Scan php files
      */
-    public function extract($path, $regex = null)
+    public function scan(string $path, string $regex = null): self
     {
         $directory = new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS);
         $iterator = new RecursiveIteratorIterator($directory);
@@ -75,15 +65,14 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
     }
 
     /**
-     * Add a new target.
-     *
-     * @param string $path
-     *
-     * @return $this
+     * Add a new domain
      */
-    public function generate($path)
+    public function domain(?string $domain, string ...$targets): self
     {
-        $this->targets[] = func_get_args();
+        $this->domains[$domain] = [
+            'translations' => Translations::create($domain),
+            'targets' => $targets
+        ];
 
         return $this;
     }
@@ -93,26 +82,37 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
      */
     public function run()
     {
-        foreach ($this->targets as $targets) {
-            $target = $targets[0];
-            $translations = new Translations();
+        $scanner = new PhpScanner(...array_column($this->domains, 'translations'));
 
-            $this->scan($translations);
+        if ($this->defaultDomain) {
+            $scanner->setDefaultDomain($this->defaultDomain);
+        }
 
-            if (is_file($target)) {
-                $fn = $this->getFunctionName('from', $target, 'File', 1);
-                $translations->mergeWith(Translations::$fn($target));
-            }
+        $this->runScanner($scanner);
+
+        $allTranslations = $scanner->getTranslations();
+
+        $poLoader = new PoLoader();
+        $poGenerator = new PoGenerator();
+
+        foreach ($allTranslations as $domain => $translations) {
+            $targets = $this->domains[$domain]['targets'];
 
             foreach ($targets as $target) {
-                $fn = $this->getFunctionName('to', $target, 'File', 1);
-                $dir = dirname($target);
+                if (is_file($target)) {
+                    $targetTranslations = $poLoader->loadFile($target);
+                    $merged = $translations->mergeWith($targetTranslations, Merge::SCAN_AND_LOAD);
+                } else {
+                    $dir = dirname($target);
 
-                if (!is_dir($dir)) {
-                    mkdir($dir, 0777, true);
+                    if (!is_dir($dir)) {
+                        mkdir($dir, 0777, true);
+                    }
+
+                    $merged = $translations;
                 }
 
-                $translations->$fn($target);
+                $poGenerator->generateFile($merged, $target);
 
                 $this->printTaskInfo("Gettext exported to {$target}");
             }
@@ -122,11 +122,9 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
     }
 
     /**
-     * Execute the scan.
-     *
-     * @param Translations $translations
+     * Execute the scanner.
      */
-    private function scan(Translations $translations)
+    private function runScanner(ScannerInterface $scanner)
     {
         foreach ($this->iterator as $each) {
             foreach ($each as $file) {
@@ -134,46 +132,8 @@ class TaskGettextScanner extends BaseTask implements TaskInterface
                     continue;
                 }
 
-                $target = $file->getPathname();
-
-                if (($fn = $this->getFunctionName('addFrom', $target, 'File'))) {
-                    $translations->$fn($target);
-                }
+                $scanner->scanFile($file->getPathname());
             }
         }
-    }
-
-    /**
-     * Get the format based in the extension.
-     *
-     * @param string $file
-     *
-     * @return string|null
-     */
-    private function getFunctionName($prefix, $file, $suffix, $key = 0)
-    {
-        if (preg_match(self::getRegex(), strtolower($file), $matches)) {
-            $format = self::$suffixes[$matches[1]];
-
-            if (is_array($format)) {
-                $format = $format[$key];
-            }
-
-            return sprintf('%s%s%s', $prefix, $format, $suffix);
-        }
-    }
-
-    /**
-     * Returns the regular expression to detect the file format.
-     * 
-     * @param string
-     */
-    private static function getRegex()
-    {
-        if (self::$regex === null) {
-            self::$regex = '/('.str_replace('.', '\\.', implode('|', array_keys(self::$suffixes))).')$/';
-        }
-
-        return self::$regex;
     }
 }

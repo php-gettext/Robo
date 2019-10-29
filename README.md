@@ -1,6 +1,6 @@
-# GettextRobo
+# Robo Tasks
 
-[Robo](http://robo.li) task to extract gettext values from files using [gettext/gettext](https://github.com/oscarotero/Gettext) library
+[Robo](http://robo.li) task to extract gettext values from files using [gettext/gettext](https://github.com/php-gettext/Gettext) library
 
 Created by Oscar Otero <http://oscarotero.com> <oom@oscarotero.com> (MIT License)
 
@@ -19,21 +19,35 @@ Create a RoboFile.php with the following code:
 ```php
 require 'vendor/autoload.php';
 
-class RoboFile extends \Robo\Tasks
+use Robo\Tasks;
+
+class RoboFile extends Robo\Tasks
 {
-    use Gettext\Robo\GettextScanner;
+    use Gettext\Robo\Gettext;
 
     /**
      * Scan files to find new gettext values
      */
     public function gettext()
     {
-        $this->taskGettextScanner()
-            ->extract('templates/')
-            ->extract('js/', '/.*\.js/') //directory + regex
-            ->generate('Locale/gl/LC_MESSAGES/messages.mo')
-            ->generate('Locale/es/LC_MESSAGES/messages.mo')
-            ->generate('Locale/en/LC_MESSAGES/messages.mo')
+        $this->taskGettext('domain1', 'domain2')
+            ->defaultDomain('domain1')
+            
+            //Scan folders with php files
+            ->scan('templates/')
+            ->scan('other-files/', '/.*\.php/')
+
+            //Save the result
+            ->domain(
+                'domain1',
+                'Locale/gl/LC_MESSAGES/domain1.mo',
+                'Locale/es/LC_MESSAGES/domain1.mo'
+            )
+            ->domain(
+                'domain2',
+                'Locale/gl/LC_MESSAGES/domain2.mo',
+                'Locale/es/LC_MESSAGES/domain2.mo'
+            )
             ->run();
     }
 }
