@@ -25,7 +25,7 @@ trait Gettext
     /**
      * Init a gettext task.
      */
-    protected function Gettext(string ...$domains)
+    protected function taskGettext(string ...$domains)
     {
         return $this->task(Scanner::class, $domains);
     }
@@ -45,6 +45,8 @@ class Scanner extends BaseTask implements TaskInterface
     public function defaultDomain(string $domain): self
     {
         $this->defaultDomain = $domain;
+
+        return $this;
     }
 
     /**
