@@ -30,14 +30,12 @@ class RoboFile extends Robo\Tasks
      */
     public function gettext()
     {
-        $this->taskGettext('domain1', 'domain2')
-            ->defaultDomain('domain1')
-            
+        $this->taskGettext()
             //Scan folders with php files
             ->scan('templates/')
             ->scan('other-files/', '/.*\.php/')
 
-            //Save the result
+            //Save the result in different domains
             ->domain(
                 'domain1',
                 'Locale/gl/LC_MESSAGES/domain1.mo',
