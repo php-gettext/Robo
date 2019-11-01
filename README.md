@@ -35,17 +35,14 @@ class RoboFile extends Robo\Tasks
             ->scan('templates/')
             ->scan('other-files/', '/.*\.php/')
 
-            //Save the result in different domains
-            ->domain(
-                'domain1',
-                'Locale/gl/LC_MESSAGES/domain1.mo',
-                'Locale/es/LC_MESSAGES/domain1.mo'
-            )
-            ->domain(
-                'domain2',
-                'Locale/gl/LC_MESSAGES/domain2.mo',
-                'Locale/es/LC_MESSAGES/domain2.mo'
-            )
+            //Save the domain1
+            ->save('domain1', 'Locale/es/LC_MESSAGES/domain1.po')
+            ->save('domain1', 'Locale/gl/LC_MESSAGES/domain1.po')
+
+            //Save the domain2
+            ->save('domain2', 'Locale/es/LC_MESSAGES/domain1.po')
+            ->save('domain2', 'Locale/gl/LC_MESSAGES/domain1.po')
+
             ->run();
     }
 }

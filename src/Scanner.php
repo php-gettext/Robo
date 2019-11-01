@@ -65,14 +65,18 @@ class Scanner extends BaseTask implements TaskInterface
     }
 
     /**
-     * Add a new domain to save the translations
+     * Save the translations
      */
-    public function domain(string $domain, string ...$targets): self
+    public function save(string $domain, string ...$targets): self
     {
-        $this->domains[$domain] = [
-            'translations' => Translations::create($domain),
-            'targets' => $targets,
-        ];
+        if (!isset($this->domains[$domain])) {
+            $this->domains[$domain] = [
+                'translations' => Translations::create($domain),
+                'targets' => [],
+            ];
+        }
+
+        $this->domains[$domain]['targets'][] = $targets;
 
         return $this;
     }
@@ -90,27 +94,28 @@ class Scanner extends BaseTask implements TaskInterface
         $allTranslations = $scanner->getTranslations();
 
         foreach ($allTranslations as $domain => $translations) {
-            $targets = $this->domains[$domain]['targets'];
+            foreach ($this->domains[$domain]['targets'] as $targets) {
+                $mainTarget = $targets[0];
 
-            foreach ($targets as $target) {
-                list($loader, $generator) = self::getFormat($target);
+                if (is_file($mainTarget)) {
+                    $loader = self::getLoader($mainTarget);
 
-                if (is_file($target)) {
-                    $targetTranslations = (new $loader())->loadFile($target);
-                    $merged = $translations->mergeWith($targetTranslations, Merge::SCAN_AND_LOAD);
-                } else {
+                    $targetTranslations = (new $loader())->loadFile($mainTarget);
+                    $translations = $translations->mergeWith($targetTranslations, Merge::SCAN_AND_LOAD);
+                }
+
+                foreach ($targets as $target) {
+                    $generator = self::getGenerator($target);
                     $dir = dirname($target);
 
                     if (!is_dir($dir)) {
                         mkdir($dir, 0777, true);
                     }
 
-                    $merged = $translations;
+                    (new $generator())->generateFile($translations, $target);
+
+                    $this->printTaskInfo("Gettext exported to {$target}");
                 }
-
-                (new $generator())->generateFile($merged, $target);
-
-                $this->printTaskInfo("Gettext exported to {$target}");
             }
         }
 
@@ -131,6 +136,16 @@ class Scanner extends BaseTask implements TaskInterface
                 $scanner->scanFile($file->getPathname());
             }
         }
+    }
+
+    private static function getLoader(string $file): string
+    {
+        return self::getFormat($file)[0];
+    }
+
+    private static function getGenerator(string $file): string
+    {
+        return self::getFormat($file)[1];
     }
 
     private static function getFormat(string $file): array
