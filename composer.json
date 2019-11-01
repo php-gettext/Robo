@@ -26,5 +26,12 @@
         "psr-4": {
             "Gettext\\Robo\\": "src"
         }
+    },
+    "require-dev": {
+        "oscarotero/php-cs-fixer-config": "^1.0",
+        "friendsofphp/php-cs-fixer": "^2.15"
+    },
+    "scripts": {
+        "cs-fix": "php-cs-fixer fix"
     }
 }

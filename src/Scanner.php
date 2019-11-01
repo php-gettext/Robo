@@ -2,24 +2,24 @@
 
 namespace Gettext\Robo;
 
-use Gettext\Translations;
-use Gettext\Scanner\ScannerInterface;
-use Gettext\Scanner\PhpScanner;
-use Gettext\Loader\MoLoader;
-use Gettext\Loader\PoLoader;
-use Gettext\Loader\ArrayLoader;
+use FilesystemIterator;
+use Gettext\Generator\ArrayGenerator;
 use Gettext\Generator\MoGenerator;
 use Gettext\Generator\PoGenerator;
-use Gettext\Generator\ArrayGenerator;
+use Gettext\Loader\ArrayLoader;
+use Gettext\Loader\MoLoader;
+use Gettext\Loader\PoLoader;
 use Gettext\Merge;
-use FilesystemIterator;
+use Gettext\Scanner\PhpScanner;
+use Gettext\Scanner\ScannerInterface;
+use Gettext\Translations;
 use MultipleIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
-use Robo\Task\BaseTask;
 use Robo\Contract\TaskInterface;
 use Robo\Result;
+use Robo\Task\BaseTask;
 use RuntimeException;
 
 class Scanner extends BaseTask implements TaskInterface
@@ -30,16 +30,16 @@ class Scanner extends BaseTask implements TaskInterface
     private static $formats = [
         '.po' => [
             PoLoader::class,
-            PoGenerator::class
+            PoGenerator::class,
         ],
         '.mo' => [
             MoLoader::class,
-            MoGenerator::class
+            MoGenerator::class,
         ],
         '.php' => [
             ArrayLoader::class,
-            ArrayGenerator::class
-        ]
+            ArrayGenerator::class,
+        ],
     ];
 
     public function __construct()
@@ -71,7 +71,7 @@ class Scanner extends BaseTask implements TaskInterface
     {
         $this->domains[$domain] = [
             'translations' => Translations::create($domain),
-            'targets' => $targets
+            'targets' => $targets,
         ];
 
         return $this;
@@ -96,7 +96,7 @@ class Scanner extends BaseTask implements TaskInterface
                 list($loader, $generator) = self::getFormat($target);
 
                 if (is_file($target)) {
-                    $targetTranslations = (new $loader)->loadFile($target);
+                    $targetTranslations = (new $loader())->loadFile($target);
                     $merged = $translations->mergeWith($targetTranslations, Merge::SCAN_AND_LOAD);
                 } else {
                     $dir = dirname($target);
@@ -108,7 +108,7 @@ class Scanner extends BaseTask implements TaskInterface
                     $merged = $translations;
                 }
 
-                (new $generator)->generateFile($merged, $target);
+                (new $generator())->generateFile($merged, $target);
 
                 $this->printTaskInfo("Gettext exported to {$target}");
             }
