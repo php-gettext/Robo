@@ -5,9 +5,11 @@ namespace Gettext\Robo;
 use FilesystemIterator;
 use Gettext\Generator\ArrayGenerator;
 use Gettext\Generator\GeneratorInterface;
+use Gettext\Generator\JsonGenerator;
 use Gettext\Generator\MoGenerator;
 use Gettext\Generator\PoGenerator;
 use Gettext\Loader\ArrayLoader;
+use Gettext\Loader\JsonLoader;
 use Gettext\Loader\LoaderInterface;
 use Gettext\Loader\MoLoader;
 use Gettext\Loader\PoLoader;
@@ -38,12 +40,14 @@ class Scanner extends BaseTask implements TaskInterface
         '.po' => PoLoader::class,
         '.mo' => MoLoader::class,
         '.php' => ArrayLoader::class,
+        '.json' => JsonLoader::class,
     ];
 
     private $generators = [
         '.po' => PoGenerator::class,
         '.mo' => MoGenerator::class,
         '.php' => ArrayGenerator::class,
+        '.json' => JsonGenerator::class,
     ];
 
     public function __construct()
