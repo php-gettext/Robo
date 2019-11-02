@@ -147,7 +147,7 @@ class Scanner extends BaseTask implements TaskInterface
                     continue;
                 }
 
-                $allTranslations[$domain] = $allTranslations[$domain]->mergedWith($translations);
+                $allTranslations[$domain] = $allTranslations[$domain]->mergeWith($translations);
             }
         }
 
@@ -164,7 +164,7 @@ class Scanner extends BaseTask implements TaskInterface
 
         if (is_string($this->scanners[$format])) {
             $class = $this->scanners[$format];
-            $scanner = new PhpScanner(...array_column($this->domains, 'translations'));
+            $scanner = new $class(...array_column($this->domains, 'translations'));
             $scanner->setDefaultDomain(key($this->domains));
 
             return $this->scanners[$format] = $scanner;
