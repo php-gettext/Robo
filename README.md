@@ -32,8 +32,8 @@ class RoboFile extends Robo\Tasks
     {
         $this->taskGettext()
             //Scan folders with php files
-            ->scan('templates/')
-            ->scan('other-files/', '/.*\.php/')
+            ->scan('templates/', '/\.php$/')
+            ->scan('other-files/', '/\.php$/')
 
             //Save the domain1
             ->save('domain1', 'Locale/es/LC_MESSAGES/domain1.po')

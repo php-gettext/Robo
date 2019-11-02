@@ -4,12 +4,15 @@ namespace Gettext\Robo;
 
 use FilesystemIterator;
 use Gettext\Generator\ArrayGenerator;
+use Gettext\Generator\GeneratorInterface;
 use Gettext\Generator\MoGenerator;
 use Gettext\Generator\PoGenerator;
 use Gettext\Loader\ArrayLoader;
+use Gettext\Loader\LoaderInterface;
 use Gettext\Loader\MoLoader;
 use Gettext\Loader\PoLoader;
 use Gettext\Merge;
+use Gettext\Scanner\JsScanner;
 use Gettext\Scanner\PhpScanner;
 use Gettext\Scanner\ScannerInterface;
 use Gettext\Translations;
@@ -26,20 +29,21 @@ class Scanner extends BaseTask implements TaskInterface
 {
     private $iterator;
     private $domains = [];
+    private $scanners = [
+        '.php' => PhpScanner::class,
+        '.js' => JsScanner::class,
+    ];
 
-    private static $formats = [
-        '.po' => [
-            PoLoader::class,
-            PoGenerator::class,
-        ],
-        '.mo' => [
-            MoLoader::class,
-            MoGenerator::class,
-        ],
-        '.php' => [
-            ArrayLoader::class,
-            ArrayGenerator::class,
-        ],
+    private $loaders = [
+        '.po' => PoLoader::class,
+        '.mo' => MoLoader::class,
+        '.php' => ArrayLoader::class,
+    ];
+
+    private $generators = [
+        '.po' => PoGenerator::class,
+        '.mo' => MoGenerator::class,
+        '.php' => ArrayGenerator::class,
     ];
 
     public function __construct()
@@ -86,34 +90,25 @@ class Scanner extends BaseTask implements TaskInterface
      */
     public function run()
     {
-        $scanner = new PhpScanner(...array_column($this->domains, 'translations'));
-        $scanner->setDefaultDomain(key($this->domains));
-
-        $this->runScanner($scanner);
-
-        $allTranslations = $scanner->getTranslations();
+        $allTranslations = $this->runScanner();
 
         foreach ($allTranslations as $domain => $translations) {
             foreach ($this->domains[$domain]['targets'] as $targets) {
                 $mainTarget = $targets[0];
 
                 if (is_file($mainTarget)) {
-                    $loader = self::getLoader($mainTarget);
-
-                    $targetTranslations = (new $loader())->loadFile($mainTarget);
+                    $targetTranslations = $this->getLoaderFor($mainTarget)->loadFile($mainTarget);
                     $translations = $translations->mergeWith($targetTranslations, Merge::SCAN_AND_LOAD);
                 }
 
                 foreach ($targets as $target) {
-                    $generator = self::getGenerator($target);
                     $dir = dirname($target);
 
                     if (!is_dir($dir)) {
                         mkdir($dir, 0777, true);
                     }
 
-                    (new $generator())->generateFile($translations, $target);
-
+                    $this->getGeneratorFor($target)->generateFile($translations, $target);
                     $this->printTaskInfo("Gettext exported to {$target}");
                 }
             }
@@ -124,8 +119,10 @@ class Scanner extends BaseTask implements TaskInterface
 
     /**
      * Execute the scanner.
+     *
+     * @return Translations[]
      */
-    private function runScanner(ScannerInterface $scanner)
+    private function runScanner(): array
     {
         foreach ($this->iterator as $each) {
             foreach ($each as $file) {
@@ -133,31 +130,85 @@ class Scanner extends BaseTask implements TaskInterface
                     continue;
                 }
 
-                $scanner->scanFile($file->getPathname());
+                $this->getScannerFor($file)->scanFile($file->getPathname());
             }
         }
-    }
 
-    private static function getLoader(string $file): string
-    {
-        return self::getFormat($file)[0];
-    }
+        $allTranslations = [];
 
-    private static function getGenerator(string $file): string
-    {
-        return self::getFormat($file)[1];
-    }
+        foreach ($this->scanners as $scanner) {
+            if (!($scanner instanceof ScannerInterface)) {
+                continue;
+            }
 
-    private static function getFormat(string $file): array
-    {
-        $regex = '/('.str_replace('.', '\\.', implode('|', array_keys(self::$formats))).')$/';
+            foreach ($scanner->getTranslations() as $domain => $translations) {
+                if (!isset($allTranslations[$domain])) {
+                    $allTranslations[$domain] = $translations;
+                    continue;
+                }
 
-        if (preg_match($regex, strtolower($file), $matches)) {
-            return self::$formats[$matches[1]] ?? null;
+                $allTranslations[$domain] = $allTranslations[$domain]->mergedWith($translations);
+            }
         }
 
-        throw new RuntimeException(
-            sprintf('Invalid file "%s". No loader and generator compatible has been found', $file)
-        );
+        return $allTranslations;
+    }
+
+    private function getScannerFor(string $file): ScannerInterface
+    {
+        $format = self::getFormat(array_keys($this->loaders), $file);
+
+        if (!$format) {
+            throw new RuntimeException(sprintf('Invalid file "%s". No scanner has been found for this format', $file));
+        }
+
+        if (is_string($this->scanners[$format])) {
+            $class = $this->scanners[$format];
+            $scanner = new PhpScanner(...array_column($this->domains, 'translations'));
+            $scanner->setDefaultDomain(key($this->domains));
+
+            return $this->scanners[$format] = $scanner;
+        }
+
+        return $this->scanners[$format];
+    }
+
+    private function getLoaderFor(string $file): LoaderInterface
+    {
+        $format = self::getFormat(array_keys($this->loaders), $file);
+
+        if (!$format) {
+            throw new RuntimeException(sprintf('Invalid file "%s". No loader has been found for this format', $file));
+        }
+
+        if (is_string($this->loaders[$format])) {
+            $class = $this->loaders[$format];
+            return $this->loaders[$format] = new $class();
+        }
+
+        return $this->loaders[$format];
+    }
+
+    private function getGeneratorFor(string $file): GeneratorInterface
+    {
+        $format = self::getFormat(array_keys($this->generators), $file);
+
+        if (!$format) {
+            throw new RuntimeException(sprintf('Invalid file "%s". No generator has been found for this format', $file));
+        }
+
+        if (is_string($this->generators[$format])) {
+            $class = $this->generators[$format];
+            return $this->generators[$format] = new $class();
+        }
+
+        return $this->generators[$format];
+    }
+
+    private static function getFormat(array $formats, string $file): ?string
+    {
+        $regex = '/('.str_replace('.', '\\.', implode('|', $formats)).')$/';
+
+        return preg_match($regex, strtolower($file), $matches) ? $matches[1] : null;
     }
 }
