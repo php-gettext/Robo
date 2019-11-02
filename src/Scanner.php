@@ -156,7 +156,7 @@ class Scanner extends BaseTask implements TaskInterface
 
     private function getScannerFor(string $file): ScannerInterface
     {
-        $format = self::getFormat(array_keys($this->loaders), $file);
+        $format = self::getFormat(array_keys($this->scanners), $file);
 
         if (!$format) {
             throw new RuntimeException(sprintf('Invalid file "%s". No scanner has been found for this format', $file));
