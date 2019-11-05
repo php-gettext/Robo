@@ -1,4 +1,11 @@
 vendor
 composer.lock
-tmp
-RoboFile.php
+*.cache
+
+# Eclipse-specific files
+/.settings/
+/.buildpath
+/.project
+
+# PhpStorm-specific files
+/.idea/
