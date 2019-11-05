@@ -19,7 +19,7 @@
     },
     "require": {
         "php": "^7.2",
-        "gettext/gettext": "dev-v5-dev",
+        "gettext/gettext": "^5.0.0",
         "consolidation/robo": "^2.0"
     },
     "autoload": {
@@ -30,6 +30,10 @@
     "require-dev": {
         "oscarotero/php-cs-fixer-config": "^1.0",
         "friendsofphp/php-cs-fixer": "^2.15"
+    },
+    "suggest": {
+        "gettext/json": "Is necessary to load and generate json files",
+        "gettext/translator": "Is necessary to load and generate php array files"
     },
     "scripts": {
         "cs-fix": "php-cs-fixer fix"

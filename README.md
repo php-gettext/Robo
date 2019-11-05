@@ -1,5 +1,10 @@
 # Robo Tasks
 
+[![Latest Version on Packagist][ico-version]][link-packagist]
+[![Software License][ico-license]](LICENSE)
+[![Quality Score][ico-scrutinizer]][link-scrutinizer]
+[![Total Downloads][ico-downloads]][link-downloads]
+
 [Robo](http://robo.li) task to extract gettext values from files using [gettext/gettext](https://github.com/php-gettext/Gettext) library
 
 Created by Oscar Otero <http://oscarotero.com> <oom@oscarotero.com> (MIT License)
@@ -53,3 +58,18 @@ Use robo to run the code:
 ```bash
 robo gettext
 ```
+
+---
+
+Please see [CHANGELOG](CHANGELOG.md) for more information about recent changes.
+
+The MIT License (MIT). Please see [LICENSE](LICENSE) for more information.
+
+[ico-version]: https://img.shields.io/packagist/v/gettext/robo.svg?style=flat-square
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+[ico-scrutinizer]: https://img.shields.io/scrutinizer/g/php-gettext/Robo.svg?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/gettext/robo.svg?style=flat-square
+
+[link-packagist]: https://packagist.org/packages/gettext/robo
+[link-scrutinizer]: https://scrutinizer-ci.com/g/php-gettext/Robo
+[link-downloads]: https://packagist.org/packages/gettext/robo
