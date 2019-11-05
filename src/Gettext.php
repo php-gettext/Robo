@@ -14,4 +14,6 @@ trait Gettext
     {
         return $this->task(Scanner::class);
     }
+
+    abstract protected function task();
 }
