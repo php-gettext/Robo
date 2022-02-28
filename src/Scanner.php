@@ -33,6 +33,7 @@ class Scanner extends BaseTask implements TaskInterface
     private $domains = [];
     private $scanners = [
         '.php' => PhpScanner::class,
+        '.phtml' => PhpScanner::class,
         '.js' => JsScanner::class,
     ];
 
@@ -40,6 +41,7 @@ class Scanner extends BaseTask implements TaskInterface
         '.po' => PoLoader::class,
         '.mo' => MoLoader::class,
         '.php' => ArrayLoader::class,
+        '.phtml' => ArrayLoader::class,
         '.json' => JsonLoader::class,
     ];
 
@@ -47,6 +49,7 @@ class Scanner extends BaseTask implements TaskInterface
         '.po' => PoGenerator::class,
         '.mo' => MoGenerator::class,
         '.php' => ArrayGenerator::class,
+        '.phtml' => ArrayGenerator::class,
         '.json' => JsonGenerator::class,
     ];
 
